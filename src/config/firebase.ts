@@ -3,7 +3,7 @@ import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
 import { getAuth } from "firebase/auth";
 
-const env = import.meta.env
+const env = import.meta.env;
 
 const firebaseConfig = {
   apiKey: env.VITE_apiKey,
@@ -12,10 +12,10 @@ const firebaseConfig = {
   storageBucket: env.VITE_storageBucket,
   messagingSenderId: env.VITE_messagingSenderId,
   appId: env.VITE_appId,
-  measurementId: env.VITE_measurementId
+  measurementId: env.VITE_measurementId,
 };
 
 const app = initializeApp(firebaseConfig);
 //const analytics = getAnalytics(app);
-const db = getFirestore(app);
-const auth = getAuth(app);
+export const db = getFirestore(app);
+export const auth = getAuth(app);

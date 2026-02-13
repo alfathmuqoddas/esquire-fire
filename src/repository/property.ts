@@ -11,6 +11,7 @@ import {
   startAfter,
   type DocumentData,
 } from "firebase/firestore";
+import type { TProperty } from "../types/Property";
 
 export type TPropertyFilter = {
   minPrice?: number;

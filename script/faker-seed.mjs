@@ -718,7 +718,7 @@ const generateData = (count) => {
 };
 async function saveToJson() {
   try {
-    const data = generateData(20000);
+    const data = generateData(10);
 
     const jsonString = JSON.stringify(data, null, 2);
 

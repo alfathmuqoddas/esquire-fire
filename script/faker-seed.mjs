@@ -693,21 +693,18 @@ const generateData = (count) => {
       ]),
 
       // Dynamic Address generation based on the selected city
-      propertyAddress: {
-        province: baseAddress.province,
-        city: baseAddress.city,
-        lat: faker.location.latitude({
-          max: baseAddress.latRange[1],
-          min: baseAddress.latRange[0],
-          precision: 2,
-        }),
-        lon: faker.location.longitude({
-          max: baseAddress.lonRange[1],
-          min: baseAddress.lonRange[0],
-          precision: 2,
-        }),
-      },
-
+      propertyAddressProvince: baseAddress.province,
+      propertyAddressCity: baseAddress.city,
+      propertyAddressLat: faker.location.latitude({
+        max: baseAddress.latRange[1],
+        min: baseAddress.latRange[0],
+        precision: 2,
+      }),
+      propertyAddressLon: faker.location.longitude({
+        max: baseAddress.lonRange[1],
+        min: baseAddress.lonRange[0],
+        precision: 2,
+      }),
       propertyAgent: {
         agentName: `${faker.person.firstName()} ${faker.person.lastName()}`,
         agentPhoneNumber: `+62${faker.helpers.arrayElement(["811", "812", "813", "852", "878"])}${faker.number.int({ min: 1000, max: 9999 })}${faker.number.int({ min: 1000, max: 9999 })}`,

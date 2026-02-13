@@ -50,7 +50,13 @@ async function uploadData() {
       // We remove the id from the object body if you don't want it inside the doc
       const { id, ...data } = item;
 
-      bulkWriter.set(docRef, data);
+      const now = admin.firestore.Timestamp.now();
+
+      bulkWriter.set(docRef, {
+        ...data,
+        createdAt: now,
+        updatedAt: now,
+      });
     });
 
     // 5. Close and flush

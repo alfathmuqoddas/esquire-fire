@@ -9,6 +9,8 @@ import {
   QueryDocumentSnapshot,
   limit,
   startAfter,
+  getDoc,
+  doc,
   type DocumentData,
 } from "firebase/firestore";
 import type { TProperty } from "../types/Property";
@@ -47,7 +49,7 @@ export const PropertyRespository = {
     sortingOrder: TSortingOrder = "desc",
     options: FetchOptions = {},
   ): Promise<{
-    properties: any[];
+    properties: TProperty[];
     lastVisible: QueryDocumentSnapshot<DocumentData> | null;
   }> {
     const colRef = collection(db, "properties");
@@ -122,7 +124,7 @@ export const PropertyRespository = {
     const properties = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
-    }));
+    })) as TProperty[];
 
     const lastVisible = snapshot.docs[snapshot.docs.length - 1] ?? null;
 
@@ -130,5 +132,23 @@ export const PropertyRespository = {
       properties,
       lastVisible,
     };
+  },
+  async getPropertyById(id: string): Promise<TProperty | null> {
+    try {
+      const docRef = doc(db, "properties", id);
+      const docSnap = await getDoc(docRef);
+
+      if (!docSnap.exists()) {
+        return null;
+      }
+
+      return {
+        id: docSnap.id,
+        ...docSnap.data(),
+      } as TProperty;
+    } catch (error) {
+      console.error(`Error fetching property ${id}:`, error);
+      return null;
+    }
   },
 };

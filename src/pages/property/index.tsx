@@ -1,9 +1,7 @@
 import { useState, useEffect } from "react";
-import { doc, getDoc } from "firebase/firestore";
 import { useParams, useLocation } from "react-router";
-import { db } from "../../config/firebase";
 import type { TProperty } from "../../types/Property";
-import { parseAsNumberLiteral } from "nuqs/server";
+import { PropertyRespository } from "../../repository/property";
 
 export default function Property() {
   let { propertyId } = useParams();
@@ -28,13 +26,11 @@ export default function Property() {
 
   const fetchProperty = async (propertyId: string) => {
     try {
-      const docRef = doc(db, "properties", propertyId);
-      const docSnap = await getDoc(docRef);
-
-      if (docSnap.exists()) {
-        setProperty(docSnap.data() as TProperty);
+      const property = await PropertyRespository.getPropertyById(propertyId);
+      if (property) {
+        setProperty(property);
       } else {
-        setError("No such document!");
+        setError("Property not found");
       }
     } catch (err) {
       setError("Failed to load property");

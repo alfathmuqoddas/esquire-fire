@@ -84,8 +84,8 @@ const addressOptions = [
   {
     province: "Sumatera Barat",
     city: "Kota Bukittinggi",
-    latRange: [-0.28, -0.28],
-    lonRange: [100.35, 100.4],
+    latRange: [-0.32, -0.24],
+    lonRange: [100.32, 100.4],
   },
   {
     province: "Sumatera Barat",
@@ -96,8 +96,8 @@ const addressOptions = [
   {
     province: "Sumatera Barat",
     city: "Kota Padang Panjang",
-    latRange: [-0.45, -0.42],
-    lonRange: [100.38, 100.42],
+    latRange: [-0.48, -0.4],
+    lonRange: [100.35, 100.43],
   },
   {
     province: "Sumatera Barat",
@@ -120,8 +120,8 @@ const addressOptions = [
   {
     province: "Sumatera Barat",
     city: "Kota Solok",
-    latRange: [-0.78, -0.75],
-    lonRange: [100.65, 100.7],
+    latRange: [-0.82, -0.72],
+    lonRange: [100.62, 100.72],
   },
   {
     province: "Riau",
@@ -210,8 +210,8 @@ const addressOptions = [
   {
     province: "Jakarta Pusat",
     city: "Kecamatan Gambir",
-    latRange: [-6.18, -6.16],
-    lonRange: [106.8, 106.83],
+    latRange: [-6.185, -6.155],
+    lonRange: [106.795, 106.835],
   },
   {
     province: "Jakarta Pusat",
@@ -462,14 +462,14 @@ const addressOptions = [
   {
     province: "Kepulauan Seribu",
     city: "Kecamatan Kepulauan Seribu Utara",
-    latRange: [-5.7, -5.4],
-    lonRange: [106.3, 106.6],
+    latRange: [-5.68, -5.42],
+    lonRange: [106.32, 106.62],
   },
   {
     province: "Kepulauan Seribu",
     city: "Kecamatan Kepulauan Seribu Selatan",
-    latRange: [-5.9, -5.6],
-    lonRange: [106.4, 106.7],
+    latRange: [-5.92, -5.58],
+    lonRange: [106.38, 106.72],
   },
   {
     province: "Banten",
@@ -655,14 +655,13 @@ const addressOptions = [
 
 const generateData = (count) => {
   return Array.from({ length: count }, () => {
-    // Pick a random city base
     const baseAddress = faker.helpers.arrayElement(addressOptions);
 
     return {
       id: faker.database.mongodbObjectId(), // Equivalent to JG.objectId()
       propertyType: faker.helpers.arrayElement(["Rumah", "Apartemen"]),
       propertyTitle: faker.lorem.sentence(),
-      propertyDeskripsi: faker.lorem.paragraph(),
+      propertyDeskripsi: faker.lorem.paragraph({ min: 5, max: 10 }),
       propertyPrice: faker.number.int({ min: 500, max: 16000 }) * 1000000,
       // JG.repeat(20, JG.integer(...))
       propertyPictures: Array.from({ length: 20 }, () =>
@@ -670,9 +669,9 @@ const generateData = (count) => {
       ),
       propertyLuasTanah: faker.number.int({ min: 36, max: 10000 }),
       propertyLuasBangunan: faker.number.int({ min: 36, max: 10000 }),
-      propertyKamarMandi: faker.number.int({ min: 1, max: 5 }),
-      propertyKamarTidur: faker.number.int({ min: 1, max: 5 }),
-      propertyCarport: faker.number.int({ min: 0, max: 5 }),
+      propertyKamarMandi: faker.number.int({ min: 1, max: 4 }),
+      propertyKamarTidur: faker.number.int({ min: 1, max: 4 }),
+      propertyCarport: faker.number.int({ min: 0, max: 4 }),
       propertyTipeSertifikat: faker.helpers.arrayElement([
         "SHM",
         "HGB",
@@ -719,7 +718,7 @@ const generateData = (count) => {
 };
 async function saveToJson() {
   try {
-    const data = generateData(10); // Generate 100 items
+    const data = generateData(20000);
 
     const jsonString = JSON.stringify(data, null, 2);
 

@@ -6,62 +6,128 @@ import {
   getDocs,
   orderBy,
   QueryConstraint,
+  QueryDocumentSnapshot,
+  limit,
+  startAfter,
+  type DocumentData,
 } from "firebase/firestore";
 
 export type TPropertyFilter = {
-  minPrice: number;
-  maxPrice: number;
-  minLotArea: number;
-  maxLotArea: number;
-  minFloorArea: number;
-  maxFloorArea: number;
-  propertyType: string;
-  province: string;
-  city: string;
-  bathrooms: number;
-  bedrooms: number;
+  minPrice?: number;
+  maxPrice?: number;
+  minLotArea?: number;
+  maxLotArea?: number;
+  minFloorArea?: number;
+  maxFloorArea?: number;
+  propertyType?: string;
+  province?: string;
+  city?: string;
+  bedrooms?: number;
+  bathrooms?: number;
+  minLat?: number;
+  maxLat?: number;
+  minLon?: number;
+  maxLon?: number;
 };
 
 export type TSortingType = "createdAt" | "price" | "lotArea" | "floorArea";
 
 export type TSortingOrder = "asc" | "desc";
 
+export type FetchOptions = {
+  pageSize?: number;
+  lastDoc?: QueryDocumentSnapshot<DocumentData> | null;
+};
+
 export const PropertyRespository = {
   async getProperties(
-    filter: TPropertyFilter,
+    filter: TPropertyFilter = {},
     sortingType: TSortingType = "createdAt",
     sortingOrder: TSortingOrder = "desc",
-  ) {
+    options: FetchOptions = {},
+  ): Promise<{
+    properties: any[];
+    lastVisible: QueryDocumentSnapshot<DocumentData> | null;
+  }> {
     const colRef = collection(db, "properties");
     let constraints: QueryConstraint[] = [];
 
-    if (filter.minPrice)
-      constraints.push(where("price", ">=", filter.minPrice));
-    if (filter.maxPrice)
-      constraints.push(where("price", "<=", filter.maxPrice));
-
+    // ── Equality filters (most selective first ── good for indexes)
+    if (filter.province) {
+      constraints.push(where("province", "==", filter.province));
+    }
+    if (filter.city) {
+      constraints.push(where("city", "==", filter.city));
+    }
     if (filter.propertyType && filter.propertyType !== "All") {
       constraints.push(where("propertyType", "==", filter.propertyType));
     }
-    if (filter.province)
-      constraints.push(where("province", "==", filter.province));
-    if (filter.city) constraints.push(where("city", "==", filter.city));
 
-    constraints.push(orderBy(sortingType, sortingOrder));
+    // ── Range / inequality filters ── now allowed on multiple fields
+    if (filter.minPrice !== undefined) {
+      constraints.push(where("propertyPrice", ">=", filter.minPrice));
+    }
+    if (filter.maxPrice !== undefined) {
+      constraints.push(where("propertyPrice", "<=", filter.maxPrice));
+    }
+
+    if (filter.minLotArea !== undefined) {
+      constraints.push(where("propertyLuasTanah", ">=", filter.minLotArea));
+    }
+    if (filter.maxLotArea !== undefined) {
+      constraints.push(where("propertyLuasTanah", "<=", filter.maxLotArea));
+    }
+
+    if (filter.minFloorArea !== undefined) {
+      constraints.push(
+        where("propertyLuasBangunan", ">=", filter.minFloorArea),
+      );
+    }
+    if (filter.maxFloorArea !== undefined) {
+      constraints.push(
+        where("propertyLuasBangunan", "<=", filter.maxFloorArea),
+      );
+    }
+
+    if (filter.bedrooms !== undefined) {
+      constraints.push(where("propertyKamarTidur", ">=", filter.bedrooms));
+    }
+    if (filter.bathrooms !== undefined) {
+      constraints.push(where("propertyKamarMandi", ">=", filter.bathrooms));
+    }
+
+    if (
+      sortingType === "price" ||
+      sortingType === "lotArea" ||
+      sortingType === "floorArea"
+    ) {
+      constraints.push(orderBy(sortingType, sortingOrder));
+      constraints.push(orderBy("createdAt", "desc"));
+    } else {
+      constraints.push(orderBy("createdAt", sortingOrder));
+    }
+
+    const pageSize = options.pageSize ?? 20;
+    constraints.push(limit(pageSize));
+
+    if (options.lastDoc) {
+      constraints.push(startAfter(options.lastDoc));
+    }
 
     const q = query(colRef, ...constraints);
 
     const snapshot = await getDocs(q);
-    let properties = snapshot.docs.map((doc) => ({
+
+    const properties = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
 
-    if (filter.minLotArea) {
-      properties = properties.filter(
-        (p) => (p as any).lotArea >= filter.minLotArea,
-      );
-    }
-    return properties;
+    const lastVisible = snapshot.docs[snapshot.docs.length - 1] ?? null;
+
+    return {
+      properties,
+      lastVisible,
+    };
   },
 };

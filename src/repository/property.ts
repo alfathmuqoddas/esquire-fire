@@ -37,17 +37,13 @@ export type TSortingType = "createdAt" | "price" | "lotArea" | "floorArea";
 
 export type TSortingOrder = "asc" | "desc";
 
-export type FetchOptions = {
-  pageSize?: number;
-  lastDoc?: QueryDocumentSnapshot<DocumentData> | null;
-};
-
 export const PropertyRespository = {
   async getProperties(
     filter: TPropertyFilter = {},
     sortingType: TSortingType = "createdAt",
     sortingOrder: TSortingOrder = "desc",
-    options: FetchOptions = {},
+    pageSize: number = 20,
+    lastDoc?: QueryDocumentSnapshot<DocumentData> | null,
   ): Promise<{
     properties: TProperty[];
     lastVisible: QueryDocumentSnapshot<DocumentData> | null;
@@ -57,10 +53,10 @@ export const PropertyRespository = {
 
     // ── Equality filters (most selective first ── good for indexes)
     if (filter.province) {
-      constraints.push(where("province", "==", filter.province));
+      constraints.push(where("propertyAddressProvince", "==", filter.province));
     }
     if (filter.city) {
-      constraints.push(where("city", "==", filter.city));
+      constraints.push(where("propertyAddressCity", "==", filter.city));
     }
     if (filter.propertyType && filter.propertyType !== "All") {
       constraints.push(where("propertyType", "==", filter.propertyType));
@@ -110,11 +106,10 @@ export const PropertyRespository = {
       constraints.push(orderBy("createdAt", sortingOrder));
     }
 
-    const pageSize = options.pageSize ?? 20;
     constraints.push(limit(pageSize));
 
-    if (options.lastDoc) {
-      constraints.push(startAfter(options.lastDoc));
+    if (lastDoc) {
+      constraints.push(startAfter(lastDoc));
     }
 
     const q = query(colRef, ...constraints);

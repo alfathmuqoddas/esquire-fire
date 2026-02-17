@@ -653,22 +653,51 @@ export const addressOptions = [
   },
 ];
 
+const PRICE_RANGES = [
+  { label: "under_500m", max: 500_000_000 },
+  { label: "500m_2b", max: 2_000_000_000 },
+  { label: "2b_10b", max: 10_000_000_000 },
+  { label: "10b_50b", max: 50_000_000_000 },
+  { label: "above_50b", max: Infinity },
+];
+
+const LOT_RANGES = [
+  { label: "under_100", max: 100 },
+  { label: "100_500", max: 500 },
+  { label: "500_2000", max: 2000 },
+  { label: "2000_1ha", max: 10000 },
+  { label: "above_1ha", max: Infinity },
+];
+
+const getBucket = (value, ranges) => {
+  return ranges.find((r) => value <= r.max)?.label || "unknown";
+};
+
 const generateData = (count) => {
   return Array.from({ length: count }, () => {
     const baseAddress = faker.helpers.arrayElement(addressOptions);
+    const type = faker.helpers.arrayElement(["Rumah", "Apartemen"]);
+    const price = faker.number.int({ min: 500, max: 16000 }) * 1000000;
+    const lt =
+      type === "Apartemen" ? 0 : faker.number.int({ min: 36, max: 10000 });
+    const lb = faker.number.int({ min: 21, max: 5000 });
 
     return {
       id: faker.database.mongodbObjectId(), // Equivalent to JG.objectId()
-      propertyType: faker.helpers.arrayElement(["Rumah", "Apartemen"]),
+      propertyType: type,
       propertyTitle: faker.lorem.sentence(),
       propertyDeskripsi: faker.lorem.paragraph({ min: 5, max: 10 }),
-      propertyPrice: faker.number.int({ min: 500, max: 16000 }) * 1000000,
-      // JG.repeat(20, JG.integer(...))
+      propertyPrice: price,
       propertyPictures: Array.from({ length: 20 }, () =>
         faker.number.int({ min: 10000000, max: 99999999 }),
       ),
-      propertyLuasTanah: faker.number.int({ min: 36, max: 10000 }),
-      propertyLuasBangunan: faker.number.int({ min: 36, max: 10000 }),
+      //bucket
+      price_bucket: getBucket(price, PRICE_RANGES),
+      lot_bucket: getBucket(lt, LOT_RANGES),
+      floor_bucket: getBucket(lb, LOT_RANGES),
+
+      propertyLuasTanah: lt,
+      propertyLuasBangunan: lb,
       propertyKamarMandi: faker.number.int({ min: 1, max: 4 }),
       propertyKamarTidur: faker.number.int({ min: 1, max: 4 }),
       propertyCarport: faker.number.int({ min: 0, max: 4 }),

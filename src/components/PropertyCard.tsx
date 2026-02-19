@@ -1,0 +1,52 @@
+import type { TProperty } from "../types/Property";
+import { Scan, Grid2x2, Bath, Bed } from "lucide-react";
+import EmblaCarouselPropertyCard from "./EmblaCarousel";
+
+export default function PropertyCard({ property }: { property: TProperty }) {
+  const {
+    propertyLuasTanah,
+    propertyLuasBangunan,
+    propertyPrice,
+    propertyKamarMandi,
+    propertyKamarTidur,
+    propertyTitle,
+    propertyAddressProvince,
+    propertyAddressCity,
+  } = property;
+  return (
+    <div className="mb-4 p-4 rounded-lg shadow hover:shadow-md transition-shadow ease-in">
+      <div className="flex flex-col gap-2">
+        <EmblaCarouselPropertyCard slides={property.propertyPictures} />
+        <div className="flex gap-2 items-center text-sm text-black/60">
+          {propertyAddressProvince}, {propertyAddressCity}
+        </div>
+        <h1 className="font-bold text-xl">
+          Rp. {propertyPrice.toLocaleString("de-DE")}
+        </h1>
+        <h3 className="text-lg">{propertyTitle}</h3>
+        <div className="flex gap-4">
+          <div className="flex items-center gap-1 h-8">
+            <Scan />
+            <p>
+              {propertyLuasTanah.toLocaleString("de-DE")} m<sup>2</sup>
+            </p>
+          </div>
+          <div className="flex items-center gap-1 h-8">
+            <Grid2x2 />
+            <p>
+              {propertyLuasBangunan.toLocaleString("de-DE")} m<sup>2</sup>
+            </p>
+          </div>
+          <div className="flex items-center gap-1 h-8">
+            <Bed />
+            <p>{propertyKamarTidur}</p>
+          </div>
+          <div className="flex items-center gap-1 h-8">
+            <Bath />
+            <p>{propertyKamarMandi}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

@@ -1,20 +1,13 @@
-import { useState, useEffect } from "react";
-import useProperties from "../../hooks/useProperties";
-import {
-  type TPropertyFilter,
-  type TSortingOrder,
-  type TSortingType,
-} from "../../repository/property";
+import { useEffect, useState } from "react";
+import { useProperties } from "../../hooks/useProperties";
+import PropertyCard from "../../components/PropertyCard";
+import { type TPropertyFilter } from "../../repository/property";
+import { addressOptions } from "../../config/options";
 
 export default function Search() {
-  const [tempFilter, setTempFilter] = useState<
-    TPropertyFilter & {
-      sortingOrder: TSortingOrder;
-      sortingType: TSortingType;
-    }
-  >({
-    province: "Jawa Barat",
-    city: "Kota Depok",
+  const [tempFilter, setTempFilter] = useState<TPropertyFilter>({
+    province: "",
+    city: "",
     minPrice: 0,
     maxPrice: 0,
     minLotArea: 0,
@@ -23,23 +16,15 @@ export default function Search() {
     maxFloorArea: 0,
     bedrooms: 0,
     bathrooms: 0,
-    propertyType: "Rumah",
-    sortingOrder: "desc" as TSortingOrder,
-    sortingType: "createdAt" as TSortingType,
+    propertyType: "",
   });
 
-  const [finalFilter, setFinalFilter] = useState<
-    | (TPropertyFilter & {
-        sortingOrder: TSortingOrder;
-        sortingType: TSortingType;
-      })
-    | undefined
-  >(undefined);
+  const [finalFilter, setFinalFilter] = useState<TPropertyFilter | undefined>(
+    undefined,
+  );
 
-  const { properties, loading, error, hasMore, loadMore } = useProperties({
+  const { properties, loading, error } = useProperties({
     filter: finalFilter,
-    sortBy: finalFilter?.sortingType,
-    sortOrder: finalFilter?.sortingOrder,
     pageSize: 20,
   });
 
@@ -47,159 +32,204 @@ export default function Search() {
     setFinalFilter(tempFilter);
   };
 
-  if (error) return <p>{error}</p>;
-  if (loading) return <p>Loading...</p>;
-  if (!properties) return <p>No properties found</p>;
+  const uniqueProvice = Array.from(
+    new Map(addressOptions.map((item) => [item.province, item])).values(),
+  );
+
+  const [cities, setCities] = useState<string[]>([]);
+
+  useEffect(() => {
+    const filteredCities = addressOptions.filter(
+      (item) => item.province === finalFilter?.province,
+    );
+    setCities(filteredCities.map((item) => item.city));
+  }, [finalFilter?.province]);
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="mb-8 bg-white p-6 rounded-lg shadow">
-        <h2 className="text-xl font-bold mb-4">Cari Properti</h2>
+    <div className="container md:w-135 mx-auto">
+      <div className="mb-8 bg-white p-6 rounded-lg">
+        <div className="flex flex-col gap-4 mb-8">
+          <h2 className="text-xl font-bold">Cari Properti</h2>
+          <div className=" grid grid-cols-1 md:grid-cols-4 gap-y-2 gap-x-4">
+            <div className="flex flex-col gap-1 col-span-4">
+              <label htmlFor="propertyType">Tipe Properti</label>
+              <select
+                id="propertyType"
+                name="propertyType"
+                value={tempFilter.propertyType}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    propertyType: e.target.value,
+                  }))
+                }
+                className="border p-2 rounded"
+              >
+                <option value="">Pilih Tipe Properti</option>
+                <option value="Rumah">Rumah</option>
+                <option value="Apartemen">Apartemen</option>
+                <option value="All">Semua Tipe</option>
+              </select>
+            </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Province */}
-          <input
-            type="text"
-            placeholder="Provinsi"
-            value={tempFilter.province}
-            onChange={(e) =>
-              setTempFilter((prev) => ({ ...prev, province: e.target.value }))
-            }
-            className="border p-2 rounded"
-          />
+            {/* Province */}
+            <div className="flex flex-col gap-1 col-span-2">
+              <label htmlFor="province">Provinsi</label>
+              <select
+                id="province"
+                name="province"
+                value={tempFilter.province}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    province: e.target.value,
+                  }))
+                }
+                className="border p-2 rounded"
+              >
+                <option value="">Pilih Provinsi</option>
+                {uniqueProvice.map((p) => (
+                  <option key={p.province} value={p.province}>
+                    {p.province}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* City */}
-          <input
-            type="text"
-            placeholder="Kota / Kabupaten"
-            value={tempFilter.city}
-            onChange={(e) =>
-              setTempFilter((prev) => ({ ...prev, city: e.target.value }))
-            }
-            className="border p-2 rounded"
-          />
+            {/* City */}
+            <div className="flex flex-col gap-1 col-span-2">
+              <label htmlFor="city">Kota / Kabupaten</label>
+              <select
+                id="city"
+                name="city"
+                value={tempFilter.city}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({ ...prev, city: e.target.value }))
+                }
+                className="border p-2 rounded col-span-2"
+              >
+                <option value="">Pilih Kota / Kabupaten</option>
+                {cities.map((c) => (
+                  <option key={c} value={c}>
+                    {c}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-          {/* Min Price */}
-          <input
-            type="number"
-            placeholder="Harga Min (Rp)"
-            value={tempFilter.minPrice || ""}
-            onChange={(e) =>
-              setTempFilter((prev) => ({
-                ...prev,
-                minPrice: Number(e.target.value) || 0,
-              }))
-            }
-            className="border p-2 rounded"
-          />
+            {/* Min Price */}
+            <div className="flex flex-col gap-1 col-span-2">
+              <label htmlFor="minPrice">Harga Min (Rp)</label>
+              <input
+                id="minPrice"
+                name="minPrice"
+                type="number"
+                placeholder="Harga Min (Rp)"
+                value={tempFilter.minPrice || ""}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    minPrice: Number(e.target.value) || 0,
+                  }))
+                }
+                className="border p-2 rounded col-span-2"
+              />
+            </div>
 
-          {/* Max Price */}
-          <input
-            type="number"
-            placeholder="Harga Max (Rp)"
-            value={tempFilter.maxPrice || ""}
-            onChange={(e) =>
-              setTempFilter((prev) => ({
-                ...prev,
-                maxPrice: Number(e.target.value) || 0,
-              }))
-            }
-            className="border p-2 rounded"
-          />
+            {/* Max Price */}
+            <div className="flex flex-col gap-1 col-span-2">
+              <label htmlFor="maxPrice">Harga Max (Rp)</label>
+              <input
+                id="maxPrice"
+                name="maxPrice"
+                type="number"
+                placeholder="Harga Max (Rp)"
+                value={tempFilter.maxPrice || ""}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    maxPrice: Number(e.target.value) || 0,
+                  }))
+                }
+                className="border p-2 rounded col-span-2"
+              />
+            </div>
 
-          {/* Bedrooms */}
-          <input
-            type="number"
-            placeholder="Min Kamar Tidur"
-            value={tempFilter.bedrooms || ""}
-            onChange={(e) =>
-              setTempFilter((prev) => ({
-                ...prev,
-                bedrooms: Number(e.target.value) || 0,
-              }))
-            }
-            className="border p-2 rounded"
-          />
+            {/* Bedrooms */}
+            <div className="flex flex-col gap-1 col-span-2">
+              <label htmlFor="bathrooms">Kamar Mandi</label>
+              <select
+                id="bathrooms"
+                name="bathrooms"
+                value={tempFilter.bathrooms}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    bathrooms: Number(e.target.value) || 0,
+                  }))
+                }
+                className="border p-2 rounded"
+              >
+                <option value="">Pilih Jumlah Kamar Mandi</option>
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4+</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1 col-span-2">
+              <label htmlFor="bedrooms">Kamar Tidur</label>
+              <select
+                id="bedrooms"
+                name="bedrooms"
+                value={tempFilter.bedrooms}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    bedrooms: Number(e.target.value) || 0,
+                  }))
+                }
+                className="border p-2 rounded"
+              >
+                <option value="">Pilih Jumlah Kamar Tidur</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+                <option value="4">4+</option>
+              </select>
+            </div>
+          </div>
 
-          {/* Property Type */}
-          <select
-            value={tempFilter.propertyType}
-            onChange={(e) =>
-              setTempFilter((prev) => ({
-                ...prev,
-                propertyType: e.target.value,
-              }))
-            }
-            className="border p-2 rounded"
+          <button
+            onClick={applyFilters}
+            className=" bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700"
           >
-            <option value="Rumah">Rumah</option>
-            <option value="Apartemen">Apartemen</option>
-            <option value="All">Semua Tipe</option>
-          </select>
-
-          {/* Sorting */}
-          <select
-            value={tempFilter.sortingType}
-            onChange={(e) =>
-              setTempFilter((prev) => ({
-                ...prev,
-                sortingType: e.target.value as TSortingType,
-              }))
-            }
-            className="border p-2 rounded"
-          >
-            <option value="createdAt">Terbaru</option>
-            <option value="price">Harga</option>
-            <option value="lotArea">Luas Tanah</option>
-          </select>
-
-          <select
-            value={tempFilter.sortingOrder}
-            onChange={(e) =>
-              setTempFilter((prev) => ({
-                ...prev,
-                sortingOrder: e.target.value as TSortingOrder,
-              }))
-            }
-            className="border p-2 rounded"
-          >
-            <option value="desc">Menurun</option>
-            <option value="asc">Menaik</option>
-          </select>
+            Terapkan Filter
+          </button>
         </div>
 
-        <button
-          onClick={applyFilters}
-          className="mt-6 bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700"
-        >
-          Terapkan Filter
-        </button>
-
         <div className="results">
-          {error && <p className="text-red-500">{error}</p>}
-
-          {loading && properties.length === 0 ? (
-            <p>Loading initial properties...</p>
-          ) : (
-            <div className="grid gap-4">
+          {loading ? (
+            <p>Loading...</p>
+          ) : error ? (
+            <p>{error}</p>
+          ) : properties.length > 0 ? (
+            <div>
               {properties.map((p) => (
-                <div key={p.id} className="p-4 border rounded">
-                  Rp {p.propertyPrice}
-                </div>
+                <PropertyCard key={p.id} property={p} />
               ))}
 
-              {hasMore && (
+              {/* {hasMore && (
                 <button
                   onClick={() => loadMore()}
                   className="p-2 bg-gray-200 rounded"
                 >
                   Load More
                 </button>
-              )}
+              )} */}
             </div>
+          ) : (
+            <p>No properties found</p>
           )}
-
-          {!loading && properties.length === 0 && <p>No properties found.</p>}
         </div>
       </div>
     </div>

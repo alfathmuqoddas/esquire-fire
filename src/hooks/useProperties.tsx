@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import {
   PropertyRespository,
   type TPropertyFilter,
@@ -6,83 +6,101 @@ import {
   type TSortingOrder,
 } from "../repository/property";
 import { type TProperty } from "../types/Property";
-import { QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
+// import { QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
 
 type TUsePropertyOptions = {
-  filter?: TPropertyFilter;
+  filter: TPropertyFilter;
   sortBy?: TSortingType;
   sortOrder?: TSortingOrder;
-  pageSize?: number;
+  pageSize: number;
 };
 
-export default function useProperties({
-  filter = {},
-  sortBy = "createdAt",
-  sortOrder = "desc",
+export const useProperties = ({
+  filter,
   pageSize = 20,
-}: TUsePropertyOptions = {}) {
+}: {
+  filter: TPropertyFilter | undefined;
+  pageSize: number;
+}) => {
   const [properties, setProperties] = useState<TProperty[]>([]);
-  const [lastVisible, setLastVisible] =
-    useState<QueryDocumentSnapshot<DocumentData> | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [hasMore, setHasMore] = useState(true);
 
   const filterKey = JSON.stringify(filter);
 
-  const fetchData = useCallback(
-    async (isInitial: boolean) => {
-      setLoading(true);
-
+  useEffect(() => {
+    const fetchProperties = async () => {
       try {
-        const currentCursor = isInitial ? null : lastVisible;
-
+        setLoading(true);
         const result = await PropertyRespository.getProperties(
           filter,
-          sortBy,
-          sortOrder,
           pageSize,
-          currentCursor,
         );
-
-        setProperties((prev) =>
-          isInitial ? result.properties : [...prev, ...result.properties],
-        );
-        setLastVisible(result.lastVisible);
-        setHasMore(result.properties.length === pageSize);
-      } catch (err: any) {
-        setError(err.message || "Failed to load properties");
+        setProperties(result.properties);
+      } catch (err) {
+        setError("Failed to load properties");
       } finally {
         setLoading(false);
       }
-    },
-    [filterKey, sortBy, sortOrder, pageSize, lastVisible],
-  );
-
-  useEffect(() => {
-    const triggerInitialLoad = async () => {
-      setLoading(true);
-      const result = await PropertyRespository.getProperties(
-        filter,
-        sortBy,
-        sortOrder,
-        pageSize,
-        null,
-      );
-      setProperties(result.properties);
-      setLastVisible(result.lastVisible);
-      setHasMore(result.properties.length === pageSize);
-      setLoading(false);
     };
+    fetchProperties();
+  }, [filterKey, pageSize]);
 
-    triggerInitialLoad();
-  }, [filterKey, sortBy, sortOrder, pageSize]);
+  return { properties, loading, error };
+};
 
-  const loadMore = () => {
-    if (!loading && hasMore) {
-      fetchData(false);
-    }
-  };
+// export const usePropertiesEdit = ({
+//   filter = {},
+//   pageSize = 20,
+// }: TUsePropertyOptions = {}) => {
+//   const [properties, setProperties] = useState<TProperty[]>([]);
+//   const [lastVisible, setLastVisible] =
+//     useState<QueryDocumentSnapshot<DocumentData> | null>(null);
+//   const [loading, setLoading] = useState(false);
+//   const [error, setError] = useState<string | null>(null);
+//   const [hasMore, setHasMore] = useState(true);
 
-  return { properties, loading, hasMore, loadMore, error };
-}
+//   const filterKey = JSON.stringify(filter);
+
+//   const fetchData = useCallback(
+//     async (isInitial: boolean) => {
+//       setLoading(true);
+
+//       try {
+//         const currentCursor = isInitial ? null : lastVisible;
+
+//         const result = await PropertyRespository.getProperties();
+
+//         setProperties(result.properties);
+//         setLastVisible(result.lastVisible);
+//         setHasMore(result.properties.length === pageSize);
+//       } catch (err: any) {
+//         setError(err.message || "Failed to load properties");
+//       } finally {
+//         setLoading(false);
+//       }
+//     },
+//     [filterKey, pageSize, lastVisible],
+//   );
+
+//   useEffect(() => {
+//     const triggerInitialLoad = async () => {
+//       setLoading(true);
+//       const result = await PropertyRespository.getProperties();
+//       setProperties(result.properties);
+//       setLastVisible(result.lastVisible);
+//       setHasMore(result.properties.length === pageSize);
+//       setLoading(false);
+//     };
+
+//     triggerInitialLoad();
+//   }, [filterKey, pageSize]);
+
+//   const loadMore = () => {
+//     if (!loading && hasMore) {
+//       fetchData(false);
+//     }
+//   };
+
+//   return { properties, loading, hasMore, loadMore, error };
+// };

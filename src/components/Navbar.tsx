@@ -1,4 +1,4 @@
-import { Menu as MenuIcon, Search } from "lucide-react";
+import { Menu as MenuIcon } from "lucide-react";
 
 export default function Navbar() {
   return (

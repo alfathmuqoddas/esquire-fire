@@ -1,9 +1,20 @@
 import { useEffect, useState } from "react";
 import { useProperties } from "../../hooks/useProperties";
 import PropertyCard from "../../components/PropertyCard";
-import { type TPropertyFilter } from "../../repository/property";
+import {
+  type TPropertyFilter,
+  type TSortingDirection,
+  type TSortingType,
+  SORTING_FIELDS,
+  SORT_DIRECTIONS,
+} from "../../repository/property";
 import { addressOptions } from "../../config/options";
-import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
+import {
+  parseAsInteger,
+  parseAsString,
+  useQueryStates,
+  parseAsStringEnum,
+} from "nuqs";
 
 export default function Search() {
   const propertyFilterParser = {
@@ -18,6 +29,8 @@ export default function Search() {
     bedrooms: parseAsInteger.withDefault(0),
     bathrooms: parseAsInteger.withDefault(0),
     propertyType: parseAsString.withDefault(""),
+    sortBy: parseAsStringEnum([...SORTING_FIELDS]).withDefault("createdAt"),
+    sortDirections: parseAsStringEnum([...SORT_DIRECTIONS]).withDefault("desc"),
   };
 
   const [appliedFilters, setAppliedFilters] = useQueryStates(
@@ -168,6 +181,82 @@ export default function Search() {
               />
             </div>
 
+            {/*min luas bangunan */}
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label htmlFor="minFloorArea">Minimal Luas Bangunan</label>
+              <input
+                id="minFloorArea"
+                name="minFloorArea"
+                type="number"
+                placeholder="Min luas bangunan"
+                value={tempFilter.minFloorArea || ""}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    minFloorArea: Number(e.target.value) || 0,
+                  }))
+                }
+                className="border p-2 rounded md:col-span-2"
+              />
+            </div>
+
+            {/* max luas bangunan */}
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label htmlFor="maxFloorArea">Max Luas Bangunan</label>
+              <input
+                id="maxFloorArea"
+                name="maxFloorArea"
+                type="number"
+                placeholder="Max luas bangunan"
+                value={tempFilter.maxFloorArea || ""}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    maxFloorArea: Number(e.target.value) || 0,
+                  }))
+                }
+                className="border p-2 rounded md:col-span-2"
+              />
+            </div>
+
+            {/* min luas tanah */}
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label htmlFor="minLotArea">Minimal Luas Tanah</label>
+              <input
+                id="minLotArea"
+                name="minLotArea"
+                type="number"
+                placeholder="Min luas tanah"
+                value={tempFilter.minLotArea || ""}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    minLotArea: Number(e.target.value) || 0,
+                  }))
+                }
+                className="border p-2 rounded md:col-span-2"
+              />
+            </div>
+
+            {/* max luas tanah */}
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label htmlFor="maxLotArea">Max Luas Tanah</label>
+              <input
+                id="maxLotArea"
+                name="maxLotArea"
+                type="number"
+                placeholder="Max Luas bangunan"
+                value={tempFilter.maxLotArea || ""}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    maxLotArea: Number(e.target.value) || 0,
+                  }))
+                }
+                className="border p-2 rounded md:col-span-2"
+              />
+            </div>
+
             {/* Bedrooms */}
             <div className="flex flex-col gap-1 md:col-span-2">
               <label htmlFor="bathrooms">Kamar Mandi</label>
@@ -209,6 +298,52 @@ export default function Search() {
                 <option value="2">2</option>
                 <option value="3">3</option>
                 <option value="4">4+</option>
+              </select>
+            </div>
+
+            {/* sort by */}
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label htmlFor="sortBy">Urutkan Berdasarkan</label>
+              <select
+                id="sortBy"
+                name="sortBy"
+                value={tempFilter.sortBy}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    sortBy: e.target.value as TSortingType,
+                  }))
+                }
+                className="border p-2 rounded"
+              >
+                {SORTING_FIELDS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* sort directions */}
+            <div className="flex flex-col gap-1 md:col-span-2">
+              <label htmlFor="sortDirection">Jenis Urutan</label>
+              <select
+                id="sortDirection"
+                name="sortDirection"
+                value={tempFilter.sortDirections}
+                onChange={(e) =>
+                  setTempFilter((prev) => ({
+                    ...prev,
+                    sortDirections: e.target.value as TSortingDirection,
+                  }))
+                }
+                className="border p-2 rounded"
+              >
+                {SORT_DIRECTIONS.map((s) => (
+                  <option key={s} value={s}>
+                    {s}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

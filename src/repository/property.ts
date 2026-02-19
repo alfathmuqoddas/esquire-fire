@@ -16,6 +16,18 @@ import {
 } from "firebase/firestore";
 import type { TProperty } from "../types/Property";
 
+export const SORTING_FIELDS = [
+  "price",
+  "lotArea",
+  "floorArea",
+  "createdAt",
+] as const;
+
+export type TSortingType = (typeof SORTING_FIELDS)[number];
+
+export const SORT_DIRECTIONS = ["asc", "desc"] as const;
+export type TSortingDirection = (typeof SORT_DIRECTIONS)[number];
+
 export type TPropertyFilter = {
   minPrice: number;
   maxPrice: number;
@@ -28,15 +40,16 @@ export type TPropertyFilter = {
   city: string;
   bedrooms: number;
   bathrooms: number;
-  minLat?: number;
-  maxLat?: number;
-  minLon?: number;
-  maxLon?: number;
+  sortBy: TSortingType;
+  sortDirections: TSortingDirection;
 };
 
-export type TSortingType = "createdAt" | "price" | "lotArea" | "floorArea";
-
-export type TSortingOrder = "asc" | "desc";
+const SORT_FIELD_MAP = {
+  price: "propertyPrice",
+  lotArea: "propertyLuasTanah",
+  floorArea: "propertyLuasBangunan",
+  createdAt: "createdAt",
+};
 
 export const PropertyRespository = {
   async getProperties(
@@ -46,6 +59,7 @@ export const PropertyRespository = {
   ) {
     const colRef = collection(db, "properties");
     let constraints: QueryConstraint[] = [];
+    let inequalityField: string | null = null;
 
     if (filter) {
       if (filter.province) {
@@ -61,30 +75,64 @@ export const PropertyRespository = {
       }
 
       // ── Range / inequality filters ── now allowed on multiple fields
-      if (filter.minPrice > 0) {
+      if (filter.minPrice && filter.minPrice > 0) {
         constraints.push(where("propertyPrice", ">=", filter.minPrice));
+        inequalityField = "propertyPrice";
       }
-      if (filter.maxPrice > 0) {
+      if (filter.maxPrice && filter.maxPrice > 0) {
         constraints.push(where("propertyPrice", "<=", filter.maxPrice));
+        inequalityField = "propertyPrice";
       }
 
-      if (filter.minLotArea > 0) {
+      if (filter.minLotArea && filter.minLotArea > 0) {
         constraints.push(where("propertyLuasTanah", ">=", filter.minLotArea));
+        inequalityField = "propertyLuasTanah";
       }
       if (filter.maxLotArea && filter.maxLotArea > 0) {
         constraints.push(where("propertyLuasTanah", "<=", filter.maxLotArea));
+        inequalityField = "propertyLuasTanah";
       }
 
-      if (filter.bedrooms > 0) {
+      if (filter.minFloorArea && filter.minFloorArea > 0) {
+        constraints.push(
+          where("propertyLuasBangunan", ">=", filter.minFloorArea),
+        );
+        inequalityField = "propertyLuasBangunan";
+      }
+
+      if (filter.maxFloorArea && filter.maxFloorArea > 0) {
+        constraints.push(
+          where("propertyLuasBangunan", "<=", filter.maxFloorArea),
+        );
+        inequalityField = "propertyLuasBangunan";
+      }
+
+      if (filter.bedrooms && filter.bedrooms > 0) {
         constraints.push(where("propertyKamarTidur", "==", filter.bedrooms));
       }
-      if (filter.bathrooms > 0) {
+      if (filter.bathrooms && filter.bathrooms > 0) {
         constraints.push(where("propertyKamarMandi", "==", filter.bathrooms));
       }
     }
 
-    constraints.push(orderBy("createdAt", "desc"));
+    const sortField = filter?.sortBy
+      ? SORT_FIELD_MAP[filter.sortBy]
+      : "createdAt";
+    const sortDirection = filter?.sortDirections || "desc";
+
+    if (inequalityField) {
+      constraints.push(orderBy(inequalityField, sortDirection));
+
+      // Secondary ordering for stable pagination
+      if (sortField !== inequalityField) {
+        constraints.push(orderBy(sortField, sortDirection));
+      }
+    } else {
+      constraints.push(orderBy(sortField, sortDirection));
+    }
+
     if (lastVisibleDoc) constraints.push(startAfter(lastVisibleDoc));
+
     constraints.push(limit(pageSize));
 
     try {

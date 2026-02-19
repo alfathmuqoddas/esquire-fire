@@ -3,25 +3,30 @@ import { useProperties } from "../../hooks/useProperties";
 import PropertyCard from "../../components/PropertyCard";
 import { type TPropertyFilter } from "../../repository/property";
 import { addressOptions } from "../../config/options";
+import { parseAsInteger, parseAsString, useQueryStates } from "nuqs";
 
 export default function Search() {
-  const [tempFilter, setTempFilter] = useState<TPropertyFilter>({
-    province: "",
-    city: "",
-    minPrice: 0,
-    maxPrice: 0,
-    minLotArea: 0,
-    maxLotArea: 0,
-    minFloorArea: 0,
-    maxFloorArea: 0,
-    bedrooms: 0,
-    bathrooms: 0,
-    propertyType: "",
-  });
+  const propertyFilterParser = {
+    province: parseAsString.withDefault(""),
+    city: parseAsString.withDefault(""),
+    minPrice: parseAsInteger.withDefault(0),
+    maxPrice: parseAsInteger.withDefault(0),
+    minLotArea: parseAsInteger.withDefault(0),
+    maxLotArea: parseAsInteger.withDefault(0),
+    minFloorArea: parseAsInteger.withDefault(0),
+    maxFloorArea: parseAsInteger.withDefault(0),
+    bedrooms: parseAsInteger.withDefault(0),
+    bathrooms: parseAsInteger.withDefault(0),
+    propertyType: parseAsString.withDefault(""),
+  };
 
-  const [finalFilter, setFinalFilter] = useState<TPropertyFilter | undefined>(
-    undefined,
+  const [appliedFilters, setAppliedFilters] = useQueryStates(
+    propertyFilterParser,
+    {
+      shallow: true,
+    },
   );
+  const [tempFilter, setTempFilter] = useState<TPropertyFilter>(appliedFilters);
 
   const {
     properties,
@@ -32,12 +37,12 @@ export default function Search() {
     loadingMore,
     errorLoadMore,
   } = useProperties({
-    filter: finalFilter,
+    filter: appliedFilters,
     pageSize: 20,
   });
 
   const applyFilters = () => {
-    setFinalFilter(tempFilter);
+    setAppliedFilters(tempFilter);
   };
 
   const uniqueProvice = Array.from(
@@ -48,10 +53,10 @@ export default function Search() {
 
   useEffect(() => {
     const filteredCities = addressOptions.filter(
-      (item) => item.province === finalFilter?.province,
+      (item) => item.province === appliedFilters?.province,
     );
     setCities(filteredCities.map((item) => item.city));
-  }, [finalFilter?.province]);
+  }, [appliedFilters?.province]);
 
   return (
     <div className="container md:w-160 mx-auto">

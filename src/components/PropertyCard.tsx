@@ -32,25 +32,25 @@ export default function PropertyCard({ property }: { property: TProperty }) {
           Rp. {propertyPrice.toLocaleString("de-DE")}
         </h1>
         <h3 className="text-lg">{propertyTitle}</h3>
-        <div className="flex gap-4">
-          <div className="flex items-center gap-1 h-8">
-            <Scan />
+        <div className="flex gap-4 text-sm">
+          <div className="flex gap-1 h-8">
+            <Scan size={16} />
             <p>
               {propertyLuasTanah.toLocaleString("de-DE")} m<sup>2</sup>
             </p>
           </div>
-          <div className="flex items-center gap-1 h-8">
-            <Grid2x2 />
+          <div className="flex gap-1 h-8">
+            <Grid2x2 size={16} />
             <p>
               {propertyLuasBangunan.toLocaleString("de-DE")} m<sup>2</sup>
             </p>
           </div>
-          <div className="flex items-center gap-1 h-8">
-            <Bed />
+          <div className="flex gap-1 h-8">
+            <Bed size={16} />
             <p>{propertyKamarTidur}</p>
           </div>
-          <div className="flex items-center gap-1 h-8">
-            <Bath />
+          <div className="flex gap-1 h-8">
+            <Bath size={16} />
             <p>{propertyKamarMandi}</p>
           </div>
         </div>

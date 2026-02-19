@@ -2,18 +2,9 @@ import { useState, useEffect } from "react";
 import {
   PropertyRespository,
   type TPropertyFilter,
-  type TSortingType,
-  type TSortingOrder,
 } from "../repository/property";
 import { type TProperty } from "../types/Property";
 // import { QueryDocumentSnapshot, type DocumentData } from "firebase/firestore";
-
-type TUsePropertyOptions = {
-  filter: TPropertyFilter;
-  sortBy?: TSortingType;
-  sortOrder?: TSortingOrder;
-  pageSize: number;
-};
 
 export const useProperties = ({
   filter,

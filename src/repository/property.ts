@@ -6,12 +6,13 @@ import {
   getDocs,
   orderBy,
   QueryConstraint,
-  QueryDocumentSnapshot,
+  // QueryDocumentSnapshot,
   limit,
-  startAfter,
+  // startAfter,
   getDoc,
   doc,
-  type DocumentData,
+  startAfter,
+  // type DocumentData,
 } from "firebase/firestore";
 import type { TProperty } from "../types/Property";
 
@@ -41,6 +42,7 @@ export const PropertyRespository = {
   async getProperties(
     filter: TPropertyFilter | undefined,
     pageSize: number = 20,
+    lastVisibleDoc: any = null,
   ) {
     const colRef = collection(db, "properties");
     let constraints: QueryConstraint[] = [];
@@ -82,6 +84,7 @@ export const PropertyRespository = {
     }
 
     constraints.push(orderBy("createdAt", "desc"));
+    if (lastVisibleDoc) constraints.push(startAfter(lastVisibleDoc));
     constraints.push(limit(pageSize));
 
     try {
@@ -94,7 +97,10 @@ export const PropertyRespository = {
       })) as TProperty[];
 
       const lastVisible = snapshot.docs[snapshot.docs.length - 1] ?? null;
-      return { properties, lastVisible };
+
+      const hasMore = properties.length === pageSize;
+
+      return { properties, lastVisible, hasMore };
     } catch (error) {
       console.error("Firestore Query Error:", error);
       throw error;

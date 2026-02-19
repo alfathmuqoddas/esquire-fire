@@ -23,7 +23,15 @@ export default function Search() {
     undefined,
   );
 
-  const { properties, loading, error } = useProperties({
+  const {
+    properties,
+    loading,
+    error,
+    loadMore,
+    hasMore,
+    loadingMore,
+    errorLoadMore,
+  } = useProperties({
     filter: finalFilter,
     pageSize: 20,
   });
@@ -46,12 +54,12 @@ export default function Search() {
   }, [finalFilter?.province]);
 
   return (
-    <div className="container md:w-135 mx-auto">
-      <div className="mb-8 bg-white p-6 rounded-lg">
+    <div className="container md:w-160 mx-auto">
+      <div className="mb-8 bg-white">
         <div className="flex flex-col gap-4 mb-8">
           <h2 className="text-xl font-bold">Cari Properti</h2>
           <div className=" grid grid-cols-1 md:grid-cols-4 gap-y-2 gap-x-4">
-            <div className="flex flex-col gap-1 col-span-4">
+            <div className="flex flex-col gap-1 md:col-span-4">
               <label htmlFor="propertyType">Tipe Properti</label>
               <select
                 id="propertyType"
@@ -73,7 +81,7 @@ export default function Search() {
             </div>
 
             {/* Province */}
-            <div className="flex flex-col gap-1 col-span-2">
+            <div className="flex flex-col gap-1 md:col-span-2">
               <label htmlFor="province">Provinsi</label>
               <select
                 id="province"
@@ -97,7 +105,7 @@ export default function Search() {
             </div>
 
             {/* City */}
-            <div className="flex flex-col gap-1 col-span-2">
+            <div className="flex flex-col gap-1 md:col-span-2">
               <label htmlFor="city">Kota / Kabupaten</label>
               <select
                 id="city"
@@ -106,7 +114,7 @@ export default function Search() {
                 onChange={(e) =>
                   setTempFilter((prev) => ({ ...prev, city: e.target.value }))
                 }
-                className="border p-2 rounded col-span-2"
+                className="border p-2 rounded md:col-span-2"
               >
                 <option value="">Pilih Kota / Kabupaten</option>
                 {cities.map((c) => (
@@ -118,7 +126,7 @@ export default function Search() {
             </div>
 
             {/* Min Price */}
-            <div className="flex flex-col gap-1 col-span-2">
+            <div className="flex flex-col gap-1 md:col-span-2">
               <label htmlFor="minPrice">Harga Min (Rp)</label>
               <input
                 id="minPrice"
@@ -132,12 +140,12 @@ export default function Search() {
                     minPrice: Number(e.target.value) || 0,
                   }))
                 }
-                className="border p-2 rounded col-span-2"
+                className="border p-2 rounded md:col-span-2"
               />
             </div>
 
             {/* Max Price */}
-            <div className="flex flex-col gap-1 col-span-2">
+            <div className="flex flex-col gap-1 md:col-span-2">
               <label htmlFor="maxPrice">Harga Max (Rp)</label>
               <input
                 id="maxPrice"
@@ -151,12 +159,12 @@ export default function Search() {
                     maxPrice: Number(e.target.value) || 0,
                   }))
                 }
-                className="border p-2 rounded col-span-2"
+                className="border p-2 rounded md:col-span-2"
               />
             </div>
 
             {/* Bedrooms */}
-            <div className="flex flex-col gap-1 col-span-2">
+            <div className="flex flex-col gap-1 md:col-span-2">
               <label htmlFor="bathrooms">Kamar Mandi</label>
               <select
                 id="bathrooms"
@@ -177,7 +185,7 @@ export default function Search() {
                 <option value="4">4+</option>
               </select>
             </div>
-            <div className="flex flex-col gap-1 col-span-2">
+            <div className="flex flex-col gap-1 md:col-span-2">
               <label htmlFor="bedrooms">Kamar Tidur</label>
               <select
                 id="bedrooms"
@@ -192,6 +200,7 @@ export default function Search() {
                 className="border p-2 rounded"
               >
                 <option value="">Pilih Jumlah Kamar Tidur</option>
+                <option value="1">1</option>
                 <option value="2">2</option>
                 <option value="3">3</option>
                 <option value="4">4+</option>
@@ -201,7 +210,7 @@ export default function Search() {
 
           <button
             onClick={applyFilters}
-            className=" bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700"
+            className=" bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 cursor-pointer"
           >
             Terapkan Filter
           </button>
@@ -218,14 +227,21 @@ export default function Search() {
                 <PropertyCard key={p.id} property={p} />
               ))}
 
-              {/* {hasMore && (
-                <button
-                  onClick={() => loadMore()}
-                  className="p-2 bg-gray-200 rounded"
-                >
-                  Load More
-                </button>
-              )} */}
+              {hasMore && (
+                <div className="flex items-center justify-center">
+                  <button
+                    onClick={() => loadMore()}
+                    className="p-2 disabled:bg-gray-300 bg-blue-600 hover:bg-blue-700 rounded text-white cursor-pointer"
+                    disabled={loadingMore}
+                  >
+                    {loadingMore
+                      ? "Loading..."
+                      : errorLoadMore
+                        ? "Error Loading More"
+                        : "Load More"}
+                  </button>
+                </div>
+              )}
             </div>
           ) : (
             <p>No properties found</p>

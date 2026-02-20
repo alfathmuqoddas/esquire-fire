@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useProperties } from "../../hooks/useProperties";
 import PropertyCard from "../../components/PropertyCard";
 import {
@@ -16,23 +16,27 @@ import {
   parseAsStringEnum,
 } from "nuqs";
 
-export default function Search() {
-  const propertyFilterParser = {
-    province: parseAsString.withDefault(""),
-    city: parseAsString.withDefault(""),
-    minPrice: parseAsInteger.withDefault(0),
-    maxPrice: parseAsInteger.withDefault(0),
-    minLotArea: parseAsInteger.withDefault(0),
-    maxLotArea: parseAsInteger.withDefault(0),
-    minFloorArea: parseAsInteger.withDefault(0),
-    maxFloorArea: parseAsInteger.withDefault(0),
-    bedrooms: parseAsInteger.withDefault(0),
-    bathrooms: parseAsInteger.withDefault(0),
-    propertyType: parseAsString.withDefault(""),
-    sortBy: parseAsStringEnum([...SORTING_FIELDS]).withDefault("createdAt"),
-    sortDirections: parseAsStringEnum([...SORT_DIRECTIONS]).withDefault("desc"),
-  };
+const propertyFilterParser = {
+  province: parseAsString.withDefault(""),
+  city: parseAsString.withDefault(""),
+  minPrice: parseAsInteger.withDefault(0),
+  maxPrice: parseAsInteger.withDefault(0),
+  minLotArea: parseAsInteger.withDefault(0),
+  maxLotArea: parseAsInteger.withDefault(0),
+  minFloorArea: parseAsInteger.withDefault(0),
+  maxFloorArea: parseAsInteger.withDefault(0),
+  bedrooms: parseAsInteger.withDefault(0),
+  bathrooms: parseAsInteger.withDefault(0),
+  propertyType: parseAsString.withDefault(""),
+  sortBy: parseAsStringEnum([...SORTING_FIELDS]).withDefault("createdAt"),
+  sortDirections: parseAsStringEnum([...SORT_DIRECTIONS]).withDefault("desc"),
+};
 
+const uniqueProvinces = Array.from(
+  new Map(addressOptions.map((item) => [item.province, item])).values(),
+);
+
+export default function Search() {
   const [appliedFilters, setAppliedFilters] = useQueryStates(
     propertyFilterParser,
     {
@@ -58,25 +62,19 @@ export default function Search() {
     setAppliedFilters(tempFilter);
   };
 
-  const uniqueProvice = Array.from(
-    new Map(addressOptions.map((item) => [item.province, item])).values(),
-  );
-
-  const [cities, setCities] = useState<string[]>([]);
-
-  useEffect(() => {
-    const filteredCities = addressOptions.filter(
-      (item) => item.province === appliedFilters?.province,
-    );
-    setCities(filteredCities.map((item) => item.city));
-  }, [appliedFilters?.province]);
+  const cities = useMemo(() => {
+    if (!tempFilter.province) return [];
+    return addressOptions
+      .filter((item) => item.province === tempFilter.province)
+      .map((item) => item.city);
+  }, [tempFilter.province]);
 
   return (
     <div className="container md:w-160 mx-auto">
       <div className="mb-8 bg-white">
         <div className="flex flex-col gap-4 mb-8">
           <h2 className="text-xl font-bold">Cari Properti</h2>
-          <div className=" grid grid-cols-1 md:grid-cols-4 gap-y-2 gap-x-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="flex flex-col gap-1 md:col-span-4">
               <label htmlFor="propertyType">Tipe Properti</label>
               <select
@@ -89,7 +87,7 @@ export default function Search() {
                     propertyType: e.target.value,
                   }))
                 }
-                className="border p-2 rounded"
+                className="border px-3 py-2.5 rounded-lg"
               >
                 <option value="">Pilih Tipe Properti</option>
                 <option value="Rumah">Rumah</option>
@@ -111,10 +109,10 @@ export default function Search() {
                     province: e.target.value,
                   }))
                 }
-                className="border p-2 rounded"
+                className="border px-3 py-2.5 rounded-lg"
               >
                 <option value="">Pilih Provinsi</option>
-                {uniqueProvice.map((p) => (
+                {uniqueProvinces.map((p) => (
                   <option key={p.province} value={p.province}>
                     {p.province}
                   </option>
@@ -132,7 +130,7 @@ export default function Search() {
                 onChange={(e) =>
                   setTempFilter((prev) => ({ ...prev, city: e.target.value }))
                 }
-                className="border p-2 rounded md:col-span-2"
+                className="border px-3 py-2.5 rounded-lg md:col-span-2"
               >
                 <option value="">Pilih Kota / Kabupaten</option>
                 {cities.map((c) => (
@@ -151,14 +149,15 @@ export default function Search() {
                 name="minPrice"
                 type="number"
                 placeholder="Harga Min (Rp)"
-                value={tempFilter.minPrice || ""}
-                onChange={(e) =>
+                value={tempFilter.minPrice === 0 ? "" : tempFilter.minPrice}
+                onChange={(e) => {
+                  const val = e.target.value;
                   setTempFilter((prev) => ({
                     ...prev,
-                    minPrice: Number(e.target.value) || 0,
-                  }))
-                }
-                className="border p-2 rounded md:col-span-2"
+                    minPrice: val === "" ? 0 : Number(val),
+                  }));
+                }}
+                className="border px-3 py-2.5 rounded-lg md:col-span-2"
               />
             </div>
 
@@ -170,14 +169,15 @@ export default function Search() {
                 name="maxPrice"
                 type="number"
                 placeholder="Harga Max (Rp)"
-                value={tempFilter.maxPrice || ""}
-                onChange={(e) =>
+                value={tempFilter.maxPrice === 0 ? "" : tempFilter.maxPrice}
+                onChange={(e) => {
+                  const val = e.target.value;
                   setTempFilter((prev) => ({
                     ...prev,
-                    maxPrice: Number(e.target.value) || 0,
-                  }))
-                }
-                className="border p-2 rounded md:col-span-2"
+                    maxPrice: val === "" ? 0 : Number(val),
+                  }));
+                }}
+                className="border px-3 py-2.5 rounded-lg md:col-span-2"
               />
             </div>
 
@@ -189,14 +189,17 @@ export default function Search() {
                 name="minFloorArea"
                 type="number"
                 placeholder="Min luas bangunan"
-                value={tempFilter.minFloorArea || ""}
-                onChange={(e) =>
+                value={
+                  tempFilter.minFloorArea === 0 ? "" : tempFilter.minFloorArea
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
                   setTempFilter((prev) => ({
                     ...prev,
-                    minFloorArea: Number(e.target.value) || 0,
-                  }))
-                }
-                className="border p-2 rounded md:col-span-2"
+                    minFloorArea: val === "" ? 0 : Number(val),
+                  }));
+                }}
+                className="border px-3 py-2.5 rounded-lg md:col-span-2"
               />
             </div>
 
@@ -208,14 +211,17 @@ export default function Search() {
                 name="maxFloorArea"
                 type="number"
                 placeholder="Max luas bangunan"
-                value={tempFilter.maxFloorArea || ""}
-                onChange={(e) =>
+                value={
+                  tempFilter.maxFloorArea === 0 ? "" : tempFilter.maxFloorArea
+                }
+                onChange={(e) => {
+                  const val = e.target.value;
                   setTempFilter((prev) => ({
                     ...prev,
-                    maxFloorArea: Number(e.target.value) || 0,
-                  }))
-                }
-                className="border p-2 rounded md:col-span-2"
+                    maxFloorArea: val === "" ? 0 : Number(val),
+                  }));
+                }}
+                className="border px-3 py-2.5 rounded-lg md:col-span-2"
               />
             </div>
 
@@ -227,14 +233,15 @@ export default function Search() {
                 name="minLotArea"
                 type="number"
                 placeholder="Min luas tanah"
-                value={tempFilter.minLotArea || ""}
-                onChange={(e) =>
+                value={tempFilter.minLotArea === 0 ? "" : tempFilter.minLotArea}
+                onChange={(e) => {
+                  const val = e.target.value;
                   setTempFilter((prev) => ({
                     ...prev,
-                    minLotArea: Number(e.target.value) || 0,
-                  }))
-                }
-                className="border p-2 rounded md:col-span-2"
+                    minLotArea: val === "" ? 0 : Number(val),
+                  }));
+                }}
+                className="border px-3 py-2.5 rounded-lg md:col-span-2"
               />
             </div>
 
@@ -246,14 +253,15 @@ export default function Search() {
                 name="maxLotArea"
                 type="number"
                 placeholder="Max Luas bangunan"
-                value={tempFilter.maxLotArea || ""}
-                onChange={(e) =>
+                value={tempFilter.maxLotArea === 0 ? "" : tempFilter.maxLotArea}
+                onChange={(e) => {
+                  const val = e.target.value;
                   setTempFilter((prev) => ({
                     ...prev,
-                    maxLotArea: Number(e.target.value) || 0,
-                  }))
-                }
-                className="border p-2 rounded md:col-span-2"
+                    maxLotArea: val === "" ? 0 : Number(val),
+                  }));
+                }}
+                className="border px-3 py-2.5 rounded-lg md:col-span-2"
               />
             </div>
 
@@ -267,10 +275,10 @@ export default function Search() {
                 onChange={(e) =>
                   setTempFilter((prev) => ({
                     ...prev,
-                    bathrooms: Number(e.target.value) || 0,
+                    bathrooms: Number(e.target.value),
                   }))
                 }
-                className="border p-2 rounded"
+                className="border px-3 py-2.5 rounded-lg"
               >
                 <option value="">Pilih Jumlah Kamar Mandi</option>
                 <option value="1">1</option>
@@ -288,10 +296,10 @@ export default function Search() {
                 onChange={(e) =>
                   setTempFilter((prev) => ({
                     ...prev,
-                    bedrooms: Number(e.target.value) || 0,
+                    bedrooms: Number(e.target.value),
                   }))
                 }
-                className="border p-2 rounded"
+                className="border px-3 py-2.5 rounded-lg"
               >
                 <option value="">Pilih Jumlah Kamar Tidur</option>
                 <option value="1">1</option>
@@ -314,7 +322,7 @@ export default function Search() {
                     sortBy: e.target.value as TSortingType,
                   }))
                 }
-                className="border p-2 rounded"
+                className="border px-3 py-2.5 rounded-lg"
               >
                 {SORTING_FIELDS.map((s) => (
                   <option key={s} value={s}>
@@ -337,7 +345,7 @@ export default function Search() {
                     sortDirections: e.target.value as TSortingDirection,
                   }))
                 }
-                className="border p-2 rounded"
+                className="border px-3 py-2.5 rounded-lg"
               >
                 {SORT_DIRECTIONS.map((s) => (
                   <option key={s} value={s}>
@@ -350,7 +358,7 @@ export default function Search() {
 
           <button
             onClick={applyFilters}
-            className=" bg-blue-600 text-white px-6 py-3 rounded-full hover:bg-blue-700 cursor-pointer"
+            className=" bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 cursor-pointer"
           >
             Terapkan Filter
           </button>

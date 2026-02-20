@@ -58,6 +58,7 @@ const EmblaCarousel: React.FC<PropType> = (props) => {
                 src={`https://picsum.photos/seed/${src}/480/270`}
                 alt={`Slide ${index + 1}`}
                 className="embla__slide__img block w-full h-full object-cover"
+                loading={`${index === 0 ? "eager" : "lazy"}`}
               />
             </div>
           ))}
@@ -82,7 +83,7 @@ const EmblaCarousel: React.FC<PropType> = (props) => {
       </button>
 
       {/* Overlay Dots - bottom center */}
-      <div className="embla__dots absolute bottom-6 left-0 right-0 flex justify-center gap-2 z-10">
+      <div className="embla__dots hidden absolute bottom-6 left-0 right-0 md:flex justify-center gap-2 z-10">
         {scrollSnaps.map((_, index) => (
           <button
             key={index}

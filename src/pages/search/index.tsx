@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useProperties } from "../../hooks/useProperties";
 import PropertyCard from "../../components/PropertyCard";
 import {
@@ -15,6 +15,7 @@ import {
   useQueryStates,
   parseAsStringEnum,
 } from "nuqs";
+import { SlidersHorizontal } from "lucide-react";
 
 const propertyFilterParser = {
   province: parseAsString.withDefault(""),
@@ -37,6 +38,7 @@ const uniqueProvinces = Array.from(
 );
 
 export default function Search() {
+  const [showFilter, setShowFilter] = useState(false);
   const [appliedFilters, setAppliedFilters] = useQueryStates(
     propertyFilterParser,
     {
@@ -72,8 +74,35 @@ export default function Search() {
   return (
     <div className="container md:w-160 mx-auto">
       <div className="mb-8 bg-white">
-        <div className="flex flex-col gap-4 mb-8">
-          <h2 className="text-xl font-bold">Cari Properti</h2>
+        <button
+          onClick={() => setShowFilter(!showFilter)}
+          className={`
+    relative flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all
+    ${
+      showFilter
+        ? "bg-blue-600 text-white shadow-inner"
+        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+    }
+  `}
+        >
+          <SlidersHorizontal
+            size={18}
+            className={showFilter ? "rotate-180 transition-transform" : ""}
+          />
+          <span>Filter</span>
+        </button>
+
+        <div
+          className={`
+    flex flex-col gap-4 my-4 overflow-hidden transition-all duration-300 ease-in-out
+    ${
+      showFilter
+        ? "opacity-100 max-h-250 translate-y-0"
+        : "opacity-0 max-h-0 -translate-y-4 pointer-events-none"
+    }
+  `}
+        >
+          <h2 className="text-xl font-bold">Filter Properti</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div className="flex flex-col gap-1 md:col-span-4">
               <label htmlFor="propertyType">Tipe Properti</label>
@@ -364,7 +393,7 @@ export default function Search() {
           </button>
         </div>
 
-        <div className="results">
+        <div className="results mt-4">
           {loading ? (
             <p>Loading...</p>
           ) : error ? (

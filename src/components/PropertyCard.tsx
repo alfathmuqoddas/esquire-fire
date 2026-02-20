@@ -1,6 +1,7 @@
 import type { TProperty } from "../types/Property";
 import { Scan, Grid2x2, Bath, Bed } from "lucide-react";
 import EmblaCarouselPropertyCard from "./EmblaCarousel";
+import { Link } from "react-router";
 
 export default function PropertyCard({ property }: { property: TProperty }) {
   const {
@@ -31,7 +32,13 @@ export default function PropertyCard({ property }: { property: TProperty }) {
         <h1 className="font-bold text-xl">
           Rp. {propertyPrice.toLocaleString("de-DE")}
         </h1>
-        <h3 className="text-lg">{propertyTitle}</h3>
+        <Link
+          to={`/property/${property.id}`}
+          className="hover:text-blue-500 hover:cursor-pointer"
+          state={{ property }}
+        >
+          <h3 className="text-lg">{propertyTitle}</h3>
+        </Link>
         <div className="flex gap-4 text-sm">
           <div className="flex gap-1 h-8">
             <Scan size={16} />

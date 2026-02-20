@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useProperties } from "../../hooks/useProperties";
 import PropertyCard from "../../components/PropertyCard";
 import {
@@ -45,6 +45,23 @@ export default function Search() {
       shallow: true,
     },
   );
+
+  const getTypedFilter = (raw: typeof appliedFilters): TPropertyFilter => ({
+    province: raw.province ?? "",
+    city: raw.city ?? "",
+    minPrice: raw.minPrice ?? 0,
+    maxPrice: raw.maxPrice ?? 0,
+    minLotArea: raw.minLotArea ?? 0,
+    maxLotArea: raw.maxLotArea ?? 0,
+    minFloorArea: raw.minFloorArea ?? 0,
+    maxFloorArea: raw.maxFloorArea ?? 0,
+    bedrooms: raw.bedrooms ?? 0,
+    bathrooms: raw.bathrooms ?? 0,
+    propertyType: raw.propertyType ?? "Rumah", // or "All" — your choice
+    sortBy: raw.sortBy ?? "createdAt",
+    sortDirections: raw.sortDirections ?? "desc",
+  });
+  const safeAppliedFilter = getTypedFilter(appliedFilters);
   const [tempFilter, setTempFilter] = useState<TPropertyFilter>(appliedFilters);
 
   const {
@@ -56,9 +73,13 @@ export default function Search() {
     loadingMore,
     errorLoadMore,
   } = useProperties({
-    filter: appliedFilters,
+    filter: safeAppliedFilter,
     pageSize: 20,
   });
+
+  useEffect(() => {
+    setTempFilter(getTypedFilter(appliedFilters));
+  }, [appliedFilters]);
 
   const applyFilters = () => {
     setAppliedFilters(tempFilter);
@@ -69,6 +90,12 @@ export default function Search() {
     return addressOptions
       .filter((item) => item.province === tempFilter.province)
       .map((item) => item.city);
+  }, [tempFilter.province]);
+
+  useEffect(() => {
+    if (tempFilter.province !== appliedFilters.province) {
+      setTempFilter((prev) => ({ ...prev, city: "" }));
+    }
   }, [tempFilter.province]);
 
   return (
@@ -97,7 +124,7 @@ export default function Search() {
     flex flex-col gap-4 my-4 overflow-hidden transition-all duration-300 ease-in-out
     ${
       showFilter
-        ? "opacity-100 max-h-250 translate-y-0"
+        ? "opacity-100 max-h-500 md:max-h-250 translate-y-0"
         : "opacity-0 max-h-0 -translate-y-4 pointer-events-none"
     }
   `}
@@ -153,18 +180,17 @@ export default function Search() {
             <div className="flex flex-col gap-1 md:col-span-2">
               <label htmlFor="city">Kota / Kabupaten</label>
               <select
-                id="city"
-                name="city"
                 value={tempFilter.city}
                 onChange={(e) =>
                   setTempFilter((prev) => ({ ...prev, city: e.target.value }))
                 }
-                className="border px-3 py-2.5 rounded-lg md:col-span-2"
+                disabled={!tempFilter.province || cities.length === 0}
+                className="border p-3 rounded-lg w-full"
               >
                 <option value="">Pilih Kota / Kabupaten</option>
-                {cities.map((c) => (
-                  <option key={c} value={c}>
-                    {c}
+                {cities.map((city) => (
+                  <option key={city} value={city}>
+                    {city}
                   </option>
                 ))}
               </select>
@@ -394,11 +420,26 @@ export default function Search() {
         </div>
 
         <div className="results mt-4">
-          {loading ? (
-            <p>Loading...</p>
+          {loading && properties.length === 0 ? (
+            <div className="py-20 text-center">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <p className="text-gray-600">Memuat properti...</p>
+            </div>
           ) : error ? (
-            <p>{error}</p>
-          ) : properties.length > 0 ? (
+            <div className="py-12 text-center text-red-600">
+              <p>{error}</p>
+              <button
+                onClick={() => loadMore()}
+                className="mt-4 text-blue-600 underline"
+              >
+                Coba lagi
+              </button>
+            </div>
+          ) : properties.length === 0 ? (
+            <div className="py-20 text-center text-gray-500">
+              Tidak ada properti yang sesuai dengan filter Anda.
+            </div>
+          ) : (
             <div>
               {properties.map((p) => (
                 <PropertyCard key={p.id} property={p} />
@@ -420,8 +461,6 @@ export default function Search() {
                 </div>
               )}
             </div>
-          ) : (
-            <p>No properties found</p>
           )}
         </div>
       </div>
